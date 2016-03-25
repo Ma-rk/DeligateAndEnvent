@@ -6,12 +6,7 @@ using System.Threading.Tasks;
 
 namespace DeligateAndEnvent
 {
-    class CallbackArg
-    {
-
-    }
-
-    class PrimeCallbackArg : CallbackArg
+    class PrimeCallbackArg : EventArgs
     {
         public int Prime;
         public PrimeCallbackArg(int prime)
@@ -22,25 +17,27 @@ namespace DeligateAndEnvent
 
     class PrimeGenerator
     {
-        public delegate void PrimDelegate(object sender, CallbackArg arg);
+        public delegate void PrimDelegate(object sender, EventArgs arg);
 
-        PrimDelegate callbacks;
+        //PrimDelegate callbacks;
 
-        public void AddDelegate(PrimDelegate callback)
-        {
-            callbacks = Delegate.Combine(callbacks, callback) as PrimDelegate;
-        }
+        //public void AddDelegate(PrimDelegate callback)
+        //{
+        //    callbacks = Delegate.Combine(callbacks, callback) as PrimDelegate;
+        //}
 
-        public void RemoveDelegate(PrimDelegate callback)
-        {
-            callbacks = Delegate.Remove(callbacks, callback) as PrimDelegate;
-        }
+        //public void RemoveDelegate(PrimDelegate callback)
+        //{
+        //    callbacks = Delegate.Remove(callbacks, callback) as PrimDelegate;
+        //}
+
+        public event EventHandler PrimeGenerated;
 
         public void Run(int limit)
         {
             for (int i = 2; i < limit; i++)
-                if (IsPrime(i) == true && callbacks != null)
-                    callbacks(this, new PrimeCallbackArg(i));
+                if (IsPrime(i) == true && PrimeGenerated != null)
+                    PrimeGenerated(this, new PrimeCallbackArg(i));
         }
 
         private bool IsPrime(int candidate)
@@ -56,13 +53,13 @@ namespace DeligateAndEnvent
 
     class Program
     {
-        static void PrintPrime(object sender, CallbackArg arg)
+        static void PrintPrime(object sender, EventArgs arg)
         {
             Console.Write((arg as PrimeCallbackArg).Prime + ", ");
         }
 
         static int Sum;
-        static void SumPrime(object sender, CallbackArg arg)
+        static void SumPrime(object sender, EventArgs arg)
         {
             Sum += (arg as PrimeCallbackArg).Prime;
         }
@@ -71,18 +68,20 @@ namespace DeligateAndEnvent
         {
             PrimeGenerator gen = new PrimeGenerator();
 
-            PrimeGenerator.PrimDelegate callprint = PrintPrime;
-            gen.AddDelegate(callprint);
+            //PrimeGenerator.PrimDelegate callprint = PrintPrime;
+            //gen.AddDelegate(callprint);
+            gen.PrimeGenerated += PrintPrime;
 
-            PrimeGenerator.PrimDelegate callsum = SumPrime;
-            gen.AddDelegate(callsum);
+            //PrimeGenerator.PrimDelegate callsum = SumPrime;
+            //gen.AddDelegate(callsum);
+            gen.PrimeGenerated += SumPrime;
 
             gen.Run(10);
             Console.WriteLine();
             Console.WriteLine(Sum);
 
             Sum = 0;
-            gen.RemoveDelegate(SumPrime);
+            gen.PrimeGenerated -= SumPrime;
             gen.Run(15);
             Console.WriteLine();
             Console.WriteLine(Sum);
